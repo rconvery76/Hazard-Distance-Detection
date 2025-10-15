@@ -1,0 +1,18 @@
+{
+  "input": "Portrait Photos\\Test2.heic",
+  "image_size": [
+    3024,
+    4032
+  ],
+  "used_embedded_depth": false,
+  "midas_model": "MiDaS_small",
+  "linear_fit": {
+    "a": 2.9480870590612627,
+    "b": -0.09820264495775209,
+    "n_points": 2
+  },
+  "notes": [
+    "Embedded depth not found or not readable.",
+    "Running MiDaS on device: cpu"
+  ]
+}

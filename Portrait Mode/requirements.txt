@@ -1,0 +1,7 @@
+pillow
+pillow-heif
+pandas
+torch
+torchvision
+transformers
+timm

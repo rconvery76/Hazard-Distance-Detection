@@ -1,0 +1,11 @@
+golf bag,
+sneaker,
+slipper,
+flip flop,
+light switch,
+towel,
+box,
+jersey
+
+
+
