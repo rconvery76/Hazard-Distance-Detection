@@ -1,4 +1,2 @@
 [core]
-    remote = myremote
-['remote "myremote"']
-    url = C:\Users\tpbar\OneDrive\Documents\DVC
+    autostage = true
