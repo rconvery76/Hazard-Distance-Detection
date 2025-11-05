@@ -56,49 +56,6 @@ h_img, w_img, _ = img.shape
 img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) # convert to RGB
 
 
-# BACKPROJECTION map to ground plane
-
-# Get a sample of all pixel coordinates
-num_px = int(h_img)*int(w_img)
-
-max_points = 100000
-max_step = num_px / float(max_points)
-max_step = math.sqrt(max_step) # account for 2D grid - 2 dimensions
-step = max(1, int(math.ceil(max_step))) # use ceiling and int to get integer step
-
-x_coords = np.arange(0, w_img, step, dtype=np.float64) # sampled column indices of original image
-y_coords = np.arange(0, h_img, step, dtype=np.float64) # sampled row indices of original image
-xs, ys = np.meshgrid(x_coords, y_coords, indexing='xy') # grid of sampled pixel coordinates
-
-# use ravel to ensure 1D arrays
-xs = xs.ravel()
-ys = ys.ravel()
-
-ones = np.ones_like(xs)
-pix_H = np.stack([xs, ys, ones], axis=0) # homogeneous pixel coords for mapping
-
-d_c = Kinv @ pix_H # direction in camera coords
-d_w = R.T @ d_c # direction in world coords
-
-# get scale s for interesection with ground plane
-d_wz = d_w[2, :] # z component of direction in world coords
-
-# ensure dz is not a zero vector
-d_wz_nonzero = np.where(d_wz == 0, 1e-10, d_wz)
-
-s = -t[2] / d_wz_nonzero # scale necessary to intersect ground plane (z=0)
-
-# only keep points where s > 0 (in front of camera)
-s = np.where(s > 0, s, 0)
-
-# ground points in world coords X_w(s) = C + s * d_w
-X = t[0] + s * d_w[0, :]
-Y = t[1] + s * d_w[1, :]
-Z = t[2] + s * d_w[2, :] # should be all zeros in ground plane
-
-pts_ground = np.stack([X, Y, Z], axis=1) # Nx3 array of ground points
-
-
 # Create ORTHOPHOTO image via homography
 # H = K [R | T] t
 
