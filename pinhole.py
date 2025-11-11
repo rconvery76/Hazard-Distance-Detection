@@ -4,7 +4,6 @@ import os
 import math
 import numpy as np
 import cv2
-import piexif # for parsing EXIF metadata
 
 # image file management
 image_file = r"C:\Users\tpbar\OneDrive\Desktop\Vision_Project\Hazard-Distance-Detection\Image_Version\Camera\1758997612945.jpg"
@@ -44,8 +43,6 @@ K = np.array([[focal_length, 0, cx],
               [0,   0,  1]], dtype=float)
 Kinv = np.linalg.inv(K)
 
-
-
 # read image (defaults to BGR format)
 img = cv2.imread(image_file)
 if img is None:
@@ -70,7 +67,6 @@ ortho_width = int(w_img)
 ortho_height = int(h_img)
 ortho_img = np.zeros((ortho_height, ortho_width, 3), dtype=np.uint8)
 
-
 # the orthophoto grid MUST cover an area big enough to include the ground points
 # compute ground-plane size by backprojecting the image corners to the ground
 corners_pix = np.array([[0.0, 0.0, 1.0],
@@ -85,13 +81,13 @@ d_wz_c_safe = np.where(np.abs(d_wz_c) < 1e-9, 1e-9, d_wz_c) # avoid div by zero
 s_c = -t[2] / d_wz_c_safe
 s_c = np.where(s_c > 0, s_c, 0.0) # only keep positive scales, in front of camera
 
-Xc = t[0] + s_c * d_w_corners[0, :]
-Yc = t[1] + s_c * d_w_corners[1, :]
+Xc = t[0] + s_c * d_w_corners[0, :] # x values of ground points
+Yc = t[1] + s_c * d_w_corners[1, :] # y values of ground points
 
-xmin, xmax = float(np.min(Xc)), float(np.max(Xc)) # ground corners
+xmin, xmax = float(np.min(Xc)), float(np.max(Xc)) # ground corner values
 ymin, ymax = float(np.min(Yc)), float(np.max(Yc))
 
-# add asymmetric padding: give much more room at the top and extra on the sides to fit whole image (could be optimized)
+# add symmetric padding: give much more room at the top and extra on the sides to fit whole image (not optimized based on camera rotation, but suffices as hardcoded)
 padding = 2.5
 xmin -= padding
 xmax += padding
@@ -132,7 +128,7 @@ map_proj = np.stack([xs_proj, ys_proj], axis=-1).astype(np.float32)
 
 # create orthophoto image via remapping with cv2.remap (provide 2-channel map and map2=None)
 orthophoto = cv2.remap(img_rgb, map_proj, None, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0,0,0))
-# details from https://docs.opencv.org/4.x/da/d54/group__imgproc__transform.html#ga6f6f4f5f1a4f5aa3f6b2c5f1e3c8b8e1
+# details from https://docs.opencv.org/4.x/da/d54/group__imgproc__transform.html
 
 # save orthophoto image
 # change back to BGR for saving with OpenCV
