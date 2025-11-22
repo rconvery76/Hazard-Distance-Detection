@@ -57,7 +57,7 @@ img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) # convert to RGB
 # H = K [R | T] t
 
 print("Creating homography")
-# construct homography from ground plane (Z=0): H = K [r1 r2 t]
+# construct homography from ground plane (Z=0): H = K [r1 r2 t] [X Y Z 1]'
 H = K @ np.hstack([R[:, 0].reshape(3, 1), R[:, 1].reshape(3, 1), t.reshape(3,1)])  # 3x3, columns are 1 and 2 of R, and t
 
 
@@ -67,34 +67,36 @@ ortho_width = int(w_img)
 ortho_height = int(h_img)
 ortho_img = np.zeros((ortho_height, ortho_width, 3), dtype=np.uint8)
 
-# the orthophoto grid MUST cover an area big enough to include the ground points
+# the orthophoto grid MUST cover an area big enough to include ALL the ground points when backprojected to the original image
 # compute ground-plane size by backprojecting the image corners to the ground
 corners_pix = np.array([[0.0, 0.0, 1.0],
                         [w_img - 1.0, 0.0, 1.0],
                         [w_img - 1.0, h_img - 1.0, 1.0],
                         [0.0, h_img - 1.0, 1.0]]).T  # 3x4
 
-d_c_corners = Kinv @ corners_pix                    # camera directions
-d_w_corners = R.T @ d_c_corners                      # world directions
-d_wz_c = d_w_corners[2, :]
-d_wz_c_safe = np.where(np.abs(d_wz_c) < 1e-9, 1e-9, d_wz_c) # avoid div by zero
-s_c = -t[2] / d_wz_c_safe
+v_c_corners = Kinv @ corners_pix # camera directions
+v_w_corners = R.T @ v_c_corners # world directions
+v_wz_c = v_w_corners[2, :] # z component of the direction vector
+v_wz_c_safe = np.where(np.abs(v_wz_c) < 1e-9, 1e-9, v_wz_c) # avoid div by zero
+s_c = -t[2] / v_wz_c_safe # scale value to ground plane
 s_c = np.where(s_c > 0, s_c, 0.0) # only keep positive scales, in front of camera
 
-Xc = t[0] + s_c * d_w_corners[0, :] # x values of ground points
-Yc = t[1] + s_c * d_w_corners[1, :] # y values of ground points
-
+Xc = t[0] + s_c * v_w_corners[0, :] # x values of ground points
+Yc = t[1] + s_c * v_w_corners[1, :] # y values of ground points
 xmin, xmax = float(np.min(Xc)), float(np.max(Xc)) # ground corner values
 ymin, ymax = float(np.min(Yc)), float(np.max(Yc))
 
-# add symmetric padding: give much more room at the top and extra on the sides to fit whole image (not optimized based on camera rotation, but suffices as hardcoded)
+# add symmetric padding: give much more room at the top and extra on the sides to fit whole image 
+# (not optimized based on camera rotation, but suffices as hardcoded)
+# make asymmetric for a better fit if needed
+# future improvement: compute exact needed bounds based on camera pose, automatically
 padding = 2.5
 xmin -= padding
 xmax += padding
 ymin -= padding
 ymax += padding
 
-# compute orthophoto pixel dimensions from world extents
+# compute orthophoto pixel dimensions from world corners and desired scale
 ortho_width = max(1, int(np.ceil((xmax - xmin) / ortho_scale))) # at least 1 pixel wide. 
 ortho_height = max(1, int(np.ceil((ymax - ymin) / ortho_scale)))
 
@@ -103,7 +105,7 @@ xs = np.arange(ortho_width, dtype=np.float64)
 ys = np.arange(ortho_height, dtype=np.float64)
 Xg, Yg = np.meshgrid(xs, ys, indexing='xy')   # orthophoto grid (cols, rows)
 
-X_world = xmin + (Xg.ravel() * ortho_scale) 
+X_world = xmin + (Xg.ravel() * ortho_scale)  # flatten ground pounts to 1D arrays, then scale every element
 Y_world = ymin + (Yg.ravel() * ortho_scale)
 ones_world = np.ones_like(X_world)
 # create 3xN homogeneous world points (X, Y, 1) so H can multiply them
@@ -112,7 +114,7 @@ world_pts = np.stack([X_world, Y_world, ones_world], axis=0)  # 3xN homogeneous 
 # project using H (3x4)
 projection = H @ world_pts
 
-# copilot help for these lines, preparing for image creation via cv2.remap:
+# GPT-5 help for these lines, preparing for image creation via cv2.remap:
 
 # normalize homogeneous coordinates 
 w = projection[2, :]
