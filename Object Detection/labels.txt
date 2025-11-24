@@ -20,7 +20,9 @@ tree root,
 bump,
 person,
 child,
-human
+human,
+golf bag, 
+chair
 
 
 
