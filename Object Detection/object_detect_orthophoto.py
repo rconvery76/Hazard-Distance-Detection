@@ -87,7 +87,7 @@ def set_camera_parameters():
     cam_height = 5 * 0.3048 # camera height in meters (5 feet)
 
     # pitch is rotation about the x axis that maps world->camera.
-    pitch_deg = math.radians(-57)  # -70 => 70 up from horizontal = 20 downfrom vertical
+    pitch_deg = math.radians(-71.75)  # -70 => 70 up from horizontal = 20 downfrom vertical
 
     t = np.array([0.0, 0.0, float(cam_height)], dtype=float).T # camera center in world coords
     R = np.array([[1, 0, 0],
