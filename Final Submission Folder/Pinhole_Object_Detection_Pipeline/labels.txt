@@ -1,0 +1,31 @@
+tree,
+trunk,
+lamp post,
+sidewalk,
+grate,
+crack,
+obstacle,
+hazard,
+stop sign,
+traffic cone,
+cone,
+sign,
+danger,
+tripping hazard,
+pothole,
+sewer cover,
+man hole,
+drain,
+tree root,
+bump,
+person,
+child,
+human,
+golf bag, 
+chair
+
+
+
+
+
+
