@@ -17,11 +17,16 @@ def findDepth(dMap, B, f, percentile=99):
   return depth
 
 ###############################################################
-import cv2
-import numpy as np
-import matplotlib.pyplot as plt
-
 if __name__ == "__main__":
+  import sys
+  import cv2
+  import numpy as np
+  import matplotlib.pyplot as plt
+
+  if len(sys.argv) != 3:
+    print("Usage: python disparitymap.py <left_img.jpg> <right_img.jpg>")
+    sys.exit(1)
+
   # Baseline distance in meters
   B = 1.98
 
@@ -29,8 +34,8 @@ if __name__ == "__main__":
   f = 1030.21
 
   # Open image files
-  fileA = "left.jpg"
-  fileB = "right.jpg"
+  fileA = sys.argv[1]
+  fileB = sys.argv[2]
   imgA = cv2.imread(fileA, cv2.IMREAD_GRAYSCALE)
   imgB = cv2.imread(fileB, cv2.IMREAD_GRAYSCALE)
   if imgA is None or imgB is None:
@@ -48,5 +53,3 @@ if __name__ == "__main__":
   # Calculate depth
   depth = findDepth(disparityMap, B, f)
   print(f"Distance to closest object: {depth:.1f} meters")
-
-###############################################################
